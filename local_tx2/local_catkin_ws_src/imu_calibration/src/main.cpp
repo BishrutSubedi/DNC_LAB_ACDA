@@ -15,13 +15,12 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int16.h"
 
-
 using namespace std;
 using namespace std::chrono;
 
 readcompass R_compass;
 float heading;
-steady_clock::time_point t1 = steady_clock::now();
+steady_clock::time_point t1 = steady_clock::now(); //gets the current time point from std::chrono 
 steady_clock::time_point t2 = steady_clock::now();
 duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
 
@@ -34,59 +33,60 @@ std_msgs::Int16 pwm_msg;
 
 int main(int argc, char **argv)
 {
-	ros::init(argc,argv,"local_imucal");    //argc,argv,name of the node
-	ros::NodeHandle n;                      //node handle will initialize the node
-
-	local_imucal=n.advertise<std_msgs::Int32>("local_imucal_msg",1); //publish on topic "local_imucal_msg,message to buffer up = 1
-
-    local_pwm=n.advertise<std_msgs::Int16>("local_pwm",1); //publisher "local_pwm", buffer 1 message before throwing away
-
-	sleep(60);                  //this is sleep time in seconds
-
+	
+	ros::init(argc,argv,"local_imucal");
+	ros::NodeHandle n;
+	local_imucal=n.advertise<std_msgs::Int32>("local_imucal_msg",1);
+    local_pwm=n.advertise<std_msgs::Int16>("local_pwm",1);
+	sleep(6);	//sleeps time in second // from <unistd.h> library									
 
 	t1 = steady_clock::now();
 	t2 = steady_clock::now();
-	time_span = duration_cast<duration<double>>(t2 - t1); //doesnot return in second, clock cycles may be
+	time_span = duration_cast<duration<double>>(t2 - t1);
 	R_compass.setting_compass();//setting compass
+
+	//start Antenna rotation with motor pwm value is 40
     for(int m=1; m<8;m++)
     {
-        pwm_msg.data=50;
+        pwm_msg.data=40;
         local_pwm.publish(pwm_msg);
         sleep(0.2);
-
     }
 
-	while(time_span.count()<20)
+	//WHILE LOOP 1 -------------------STARTS
+	while(time_span.count()<10)
 	{
 		heading=R_compass.c_heading();
-//		cout<<heading<<endl;
+		cout<<"Local compass heading is : " << heading << endl;
 		t2 = steady_clock::now();
 		time_span = duration_cast<duration<double>>(t2 - t1);
-		usleep(100); //sleep microseconds
+		usleep(100);//usleep suspends execution of thread for int usleep(useconds_t usec) usec microsecond <unistd.h>
 	}
-	
+	//WHILE LOOP 1 -------------------ENDS
+
 //	R_compass.start_repmotion();
 	t1 = steady_clock::now();
 	t2 = steady_clock::now();
 	time_span = duration_cast<duration<double>>(t2 - t1);
     for(int m=1; m<8;m++)
     {
-        pwm_msg.data=-50;
+        pwm_msg.data=-40;
         local_pwm.publish(pwm_msg);
-        sleep(0.2);
+        sleep(0.2);		//in seconds
     }
-//	motor_rotate_direction(2);
-	while(time_span.count()<20)
+
+	//WHILE LOOP 2 -------------------STARTS
+	while(time_span.count()<10)  //motor_rotate_direction(2);
 	{
 		heading=R_compass.c_heading();
-//		cout<<heading<<endl;
+		cout<<"Local compass heading is : " << heading << endl;
 		t2 = steady_clock::now();
 		time_span = duration_cast<duration<double>>(t2 - t1);
-		usleep(100);
+		usleep(100); //in microsecond
 	}
+	//WHILE LOOP 2 -------------------ENDS
 
-//	motor_rotate_direction(3);
-//	Motor_speed(0);
+//	STOPPING THE MOTOR
     for(int m=1; m<8;m++)
     {
         pwm_msg.data=0;
@@ -100,30 +100,16 @@ int main(int argc, char **argv)
 	float old_heading = heading;
 	int stop_condition=0;
 
+	//WHILE LOOP 3 -------------------STARTS
 	while (stable==1)
 	{
 		t2=steady_clock::now();
 		float new_heading=R_compass.c_heading();
 		time_span = duration_cast<duration<double>>(t2 - t1);
+		float error= new_heading-old_heading; 		// copied here
 		if (time_span.count()>20)
 		{
-//			imucal_msg.data = 0;
-//			local_imucal.publish(imucal_msg);
 			float error= new_heading-old_heading;
-//
-//			for(int m=1; m<8;m++)
-//			{
-//				imucal_msg.data=1;
-//				local_imucal.publish(imucal_msg);
-//				sleep(1);
-//
-//			}
-//
-//			break;
-
-
-
-
 
 			if (abs(error)<1.5)
 			{
@@ -152,26 +138,15 @@ int main(int argc, char **argv)
 			t1=steady_clock::now();
 
 		}
-		usleep(500);
-//		cout<<new_heading<<endl;
+		usleep(100);
+		cout<<"remote_imu_stop_condition " << stop_condition<< endl;
+		cout<<"using cout error is " << error << endl;
+		cout<<"old_heading is " << old_heading << endl;
+		cout<<"new_heading is " << new_heading << endl;
 		cout<<"local_imu_stop_condition "<< stop_condition<<endl;
 
 	}
+	//WHILE LOOP 3 -------------------ENDS
 
-
-
-
-	
-
-
-//	sleep(2);
-//	heading=R_compass.c_heading();
-//	float offset = heading-90;
-//	ofstream myfile;
-//	myfile.open("/home/ubuntu/offset.txt");
-//	myfile << offset;
-//	myfile.close();
 	R_compass.close_runcalibration();
-
-
 }
