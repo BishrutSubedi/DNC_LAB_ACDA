@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 	//WHILE LOOP 1 -------------------ENDS
 	
 //	R_compass.start_repmotion();
-    for(int m=1; m<16;m++)
+    for(int m = 1; m < 16;m++)
     {
         pwm_msg.data=-80;
         remote_pwm.publish(pwm_msg);
