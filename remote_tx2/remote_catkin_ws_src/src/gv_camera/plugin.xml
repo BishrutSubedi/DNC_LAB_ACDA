@@ -1,0 +1,15 @@
+<library path="src">
+  <class name="My Plugin" type="gv_camera.my_module.MyPlugin" base_class_type="rqt_gui_py::Plugin">
+   <description>
+      geovsion camera widge for ROS topics.
+    </description>
+    <qtgui>
+      <group>
+        <label>Visualization</label>
+        <statustip>Plugins related to visualization.</statustip>
+      </group>
+      <label>GV_camera_node</label>
+      <statustip>geovsion camera widge for ROS topics.</statustip>
+    </qtgui>
+  </class>
+</library>
